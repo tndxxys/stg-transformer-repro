@@ -1,0 +1,11 @@
+.idea
+.vs
+.vscode
+
+notebooks
+visualize
+saved
+data
+docs
+
+__pycache__/

@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+# @Date  : 2020/4/27
+# @Author: Luokun
+# @Email : olooook@outlook.com
+
+import json
+from dataclasses import dataclass
+
+
+@dataclass
+class Config:
+    lr: float
+    epochs: int
+    batch_size: int
+    data_split: float
+    adj_file: str
+    data_file: str
+    saved_dir: str
+    n_nodes: int
+    out_timesteps: int
+    points_per_hour: int
+    hours: list = None
+    device_for_data: str = 'cpu'
+    device_for_model: str = 'cpu'
+
+
+def config(file):
+    return Config(**json.loads(open(file).read()))

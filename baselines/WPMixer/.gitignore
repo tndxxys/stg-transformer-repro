@@ -1,0 +1,7 @@
+*.pyc 
+*.ini
+*.bak
+*.xlsx
+*.csv
+*.docx
+readme_old.md
