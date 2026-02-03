@@ -133,12 +133,12 @@ class TemporalEncoder(nn.Module):
     def forward(self, x):
         # x: (B, T, N, D) -> (B*N, T, D)
         batch_size, seq_len, n_nodes, d_model = x.shape
-        x_reshaped = x.view(batch_size * n_nodes, seq_len, d_model)
+        x_reshaped = x.reshape(batch_size * n_nodes, seq_len, d_model)
         x_reshaped = self.pos_encoding(x_reshaped)
         for layer in self.layers:
             x_reshaped = layer(x_reshaped)
         # 恢复为 (B, T, N, D)
-        return x_reshaped.view(batch_size, seq_len, n_nodes, d_model)
+        return x_reshaped.reshape(batch_size, seq_len, n_nodes, d_model)
 
 
 class TemporalDecoder(nn.Module):
@@ -160,13 +160,13 @@ class TemporalDecoder(nn.Module):
     def forward(self, memory):
         # memory: (B, T, N, D)
         batch_size, seq_len, n_nodes, d_model = memory.shape
-        memory = memory.view(batch_size * n_nodes, seq_len, d_model)
+        memory = memory.reshape(batch_size * n_nodes, seq_len, d_model)
         # 使用 learnable query 作为解码器输入
         queries = self.query_embed.unsqueeze(0).expand(batch_size * n_nodes, -1, -1)
         queries = self.pos_encoding(queries)
         out = self.decoder(queries, memory)
         # 输出 (B, N, pred_len, D)
-        return out.view(batch_size, n_nodes, self.pred_len, d_model)
+        return out.reshape(batch_size, n_nodes, self.pred_len, d_model)
 
 
 class PositionalEncoding(nn.Module):
