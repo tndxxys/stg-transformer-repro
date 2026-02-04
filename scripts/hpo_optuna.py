@@ -151,9 +151,17 @@ def main() -> None:
 
     parser.add_argument("--n_trials", type=int, default=30)
     parser.add_argument("--timeout", type=int, default=None)
-    parser.add_argument("--study_name", type=str, default="stg_transformer_hpo")
-    parser.add_argument("--out", type=str, default="hpo_best.json")
+    parser.add_argument("--study_name", type=str, default=None)
+    parser.add_argument("--out", type=str, default=None)
     args = parser.parse_args()
+
+    target_tag = "all"
+    if args.target_cols:
+        target_tag = "_".join(args.target_cols)
+    if args.study_name is None:
+        args.study_name = f"hpo_{target_tag}_s{args.seq_len}_p{args.pred_len}"
+    if args.out is None:
+        args.out = f"hpo_best_{target_tag}_s{args.seq_len}_p{args.pred_len}.json"
 
     study = optuna.create_study(direction="minimize", study_name=args.study_name)
     study.optimize(lambda t: objective(t, args), n_trials=args.n_trials, timeout=args.timeout)
