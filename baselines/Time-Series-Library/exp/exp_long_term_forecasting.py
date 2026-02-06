@@ -21,6 +21,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
     def __init__(self, args):
         super(Exp_Long_Term_Forecast, self).__init__(args)
 
+    @staticmethod
+    def _calc_metrics(true_arr, pred_arr):
+        mse_v = mean_squared_error(true_arr, pred_arr)
+        rmse_v = np.sqrt(mse_v)
+        mae_v = mean_absolute_error(true_arr, pred_arr)
+        r2_v = r2_score(true_arr, pred_arr)
+        return mse_v, rmse_v, mae_v, r2_v
+
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
 
@@ -42,11 +50,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
     def vali(self, vali_data, vali_loader, criterion):
         total_loss = []
+        preds = []
+        trues = []
+        preds_std = []
+        trues_std = []
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
-                batch_y = batch_y.float()
+                batch_y = batch_y.float().to(self.device)
 
                 if self.args.no_time_features:
                     batch_x_mark = None
@@ -55,10 +67,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     batch_x_mark = batch_x_mark.float().to(self.device)
                     batch_y_mark = batch_y_mark.float().to(self.device)
 
-                # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
                 dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
-                # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
                         if self.args.output_attention:
@@ -70,27 +80,60 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                     else:
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, -self.args.pred_len:, f_dim:]
-                batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
+                batch_y = batch_y[:, -self.args.pred_len:, f_dim:]
 
-                pred = outputs.detach().cpu()
-                true = batch_y.detach().cpu()
+                loss = criterion(outputs, batch_y)
+                total_loss.append(loss.item())
 
-                loss = criterion(pred, true)
+                pred_std = outputs.detach().cpu().numpy()
+                true_std = batch_y.detach().cpu().numpy()
+                if vali_data.scale and self.args.inverse:
+                    shape = pred_std.shape
+                    pred_raw = vali_data.inverse_transform(pred_std.reshape(shape[0] * shape[1], -1)).reshape(shape)
+                    true_raw = vali_data.inverse_transform(true_std.reshape(shape[0] * shape[1], -1)).reshape(shape)
+                else:
+                    pred_raw = pred_std
+                    true_raw = true_std
 
-                total_loss.append(loss)
-        total_loss = np.average(total_loss)
+                preds_std.append(pred_std)
+                trues_std.append(true_std)
+                preds.append(pred_raw)
+                trues.append(true_raw)
+
+        avg_loss = float(np.average(total_loss))
+        preds = np.concatenate(preds, axis=0)
+        trues = np.concatenate(trues, axis=0)
+        preds_std = np.concatenate(preds_std, axis=0)
+        trues_std = np.concatenate(trues_std, axis=0)
+
+        flat_true = trues.reshape(-1, trues.shape[-1])
+        flat_pred = preds.reshape(-1, preds.shape[-1])
+        flat_true_s = trues_std.reshape(-1, trues_std.shape[-1])
+        flat_pred_s = preds_std.reshape(-1, preds_std.shape[-1])
+
+        mse, rmse, mae, r2 = self._calc_metrics(flat_true, flat_pred)
+        mse_s, rmse_s, mae_s, r2_s = self._calc_metrics(flat_true_s, flat_pred_s)
+        metrics = {
+            "MSE": mse,
+            "RMSE": rmse,
+            "MAE": mae,
+            "R2": r2,
+            "Std_MSE": mse_s,
+            "Std_RMSE": rmse_s,
+            "Std_MAE": mae_s,
+            "Std_R2": r2_s,
+        }
         self.model.train()
-        return total_loss
+        return avg_loss, metrics
 
     def train(self, setting):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
         print('Model parameters: ', sum(param.numel() for param in self.model.parameters()))
-        for (name, param) in self.model.named_parameters():
-            print(name, param.numel())
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -177,11 +220,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
-            vali_loss = self.vali(vali_data, vali_loader, criterion)
-            test_loss = self.vali(test_data, test_loader, criterion)
+            vali_loss, vali_metrics = self.vali(vali_data, vali_loader, criterion)
+            test_loss, _ = self.vali(test_data, test_loader, criterion)
 
-            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            print(
+                f"Epoch {epoch + 1}/{self.args.train_epochs} - Train Loss: {train_loss:.4f}, "
+                f"Val Loss: {vali_loss:.4f}, RMSE: {vali_metrics['RMSE']:.4f}, "
+                f"Std RMSE: {vali_metrics['Std_RMSE']:.4f}"
+            )
+            print("Steps: {0} | Test Loss: {1:.7f}".format(train_steps, test_loss))
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
@@ -301,20 +348,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             dtw = -999
             
 
-        def _calc_metrics(true_arr, pred_arr):
-            mse_v = mean_squared_error(true_arr, pred_arr)
-            rmse_v = np.sqrt(mse_v)
-            mae_v = mean_absolute_error(true_arr, pred_arr)
-            r2_v = r2_score(true_arr, pred_arr)
-            return mse_v, rmse_v, mae_v, r2_v
-
         flat_true = trues.reshape(-1, trues.shape[-1])
         flat_pred = preds.reshape(-1, preds.shape[-1])
         flat_true_s = trues_std.reshape(-1, trues_std.shape[-1])
         flat_pred_s = preds_std.reshape(-1, preds_std.shape[-1])
 
-        mse, rmse, mae, r2 = _calc_metrics(flat_true, flat_pred)
-        mse_s, rmse_s, mae_s, r2_s = _calc_metrics(flat_true_s, flat_pred_s)
+        mse, rmse, mae, r2 = self._calc_metrics(flat_true, flat_pred)
+        mse_s, rmse_s, mae_s, r2_s = self._calc_metrics(flat_true_s, flat_pred_s)
         print('mse:{}, mae:{}, r2:{}, dtw:{}'.format(mse, mae, r2, dtw))
         print('std_mse:{}, std_rmse:{}, std_mae:{}, std_r2:{}'.format(mse_s, rmse_s, mae_s, r2_s))
         f = open("result_long_term_forecast.txt", 'a')
