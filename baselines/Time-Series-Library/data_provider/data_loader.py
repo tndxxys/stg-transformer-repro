@@ -269,6 +269,12 @@ class Dataset_Custom(Dataset):
             num_test = 0
             num_vali = len(df_raw) - num_train
 
+        # ensure test split has enough length for at least one window
+        min_required = self.seq_len + self.pred_len
+        if num_test < min_required:
+            num_test = 0
+            num_vali = len(df_raw) - num_train
+
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
         border2s = [num_train, num_train + num_vali, len(df_raw)]
         border1 = border1s[self.set_type]
