@@ -2,6 +2,7 @@ from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
 from utils.metrics import metric
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import torch
 import torch.nn as nn
 import torch.profiler
@@ -47,8 +48,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float()
 
-                batch_x_mark = batch_x_mark.float().to(self.device)
-                batch_y_mark = batch_y_mark.float().to(self.device)
+                if self.args.no_time_features:
+                    batch_x_mark = None
+                    batch_y_mark = None
+                else:
+                    batch_x_mark = batch_x_mark.float().to(self.device)
+                    batch_y_mark = batch_y_mark.float().to(self.device)
 
                 # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
@@ -112,8 +117,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float().to(self.device)
-                batch_x_mark = batch_x_mark.float().to(self.device)
-                batch_y_mark = batch_y_mark.float().to(self.device)
+                if self.args.no_time_features:
+                    batch_x_mark = None
+                    batch_y_mark = None
+                else:
+                    batch_x_mark = batch_x_mark.float().to(self.device)
+                    batch_y_mark = batch_y_mark.float().to(self.device)
 
                 # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
@@ -205,8 +214,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float().to(self.device)
 
-                batch_x_mark = batch_x_mark.float().to(self.device)
-                batch_y_mark = batch_y_mark.float().to(self.device)
+                if self.args.no_time_features:
+                    batch_x_mark = None
+                    batch_y_mark = None
+                else:
+                    batch_x_mark = batch_x_mark.float().to(self.device)
+                    batch_y_mark = batch_y_mark.float().to(self.device)
 
                 # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
@@ -288,10 +301,22 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             dtw = -999
             
 
-        mae, mse, rmse, mape, mspe = metric(preds, trues)
-        mae_s, mse_s, rmse_s, mape_s, mspe_s = metric(preds_std, trues_std)
-        print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
-        print('std_mse:{}, std_rmse:{}, std_mae:{}'.format(mse_s, rmse_s, mae_s))
+        def _calc_metrics(true_arr, pred_arr):
+            mse_v = mean_squared_error(true_arr, pred_arr)
+            rmse_v = np.sqrt(mse_v)
+            mae_v = mean_absolute_error(true_arr, pred_arr)
+            r2_v = r2_score(true_arr, pred_arr)
+            return mse_v, rmse_v, mae_v, r2_v
+
+        flat_true = trues.reshape(-1, trues.shape[-1])
+        flat_pred = preds.reshape(-1, preds.shape[-1])
+        flat_true_s = trues_std.reshape(-1, trues_std.shape[-1])
+        flat_pred_s = preds_std.reshape(-1, preds_std.shape[-1])
+
+        mse, rmse, mae, r2 = _calc_metrics(flat_true, flat_pred)
+        mse_s, rmse_s, mae_s, r2_s = _calc_metrics(flat_true_s, flat_pred_s)
+        print('mse:{}, mae:{}, r2:{}, dtw:{}'.format(mse, mae, r2, dtw))
+        print('std_mse:{}, std_rmse:{}, std_mae:{}, std_r2:{}'.format(mse_s, rmse_s, mae_s, r2_s))
         f = open("result_long_term_forecast.txt", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
