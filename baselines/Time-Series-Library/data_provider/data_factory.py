@@ -65,7 +65,7 @@ def data_provider(args, flag):
         if args.data == 'm4':
             drop_last = False
         data_set = Data(
-            args = args,
+            args=args,
             root_path=args.root_path,
             data_path=args.data_path,
             flag=flag,
@@ -76,7 +76,26 @@ def data_provider(args, flag):
             freq=freq,
             seasonal_patterns=args.seasonal_patterns
         )
-        print(flag, len(data_set))
+        try:
+            ds_len = len(data_set)
+        except ValueError:
+            ds_len = -1
+        if ds_len < 0 and flag.lower() == 'test':
+            data_set = Data(
+                args=args,
+                root_path=args.root_path,
+                data_path=args.data_path,
+                flag='val',
+                size=[args.seq_len, args.label_len, args.pred_len],
+                features=args.features,
+                target=args.target,
+                timeenc=timeenc,
+                freq=freq,
+                seasonal_patterns=args.seasonal_patterns
+            )
+            ds_len = len(data_set)
+            flag = 'val'
+        print(flag, ds_len)
         data_loader = DataLoader(
             data_set,
             batch_size=batch_size,
