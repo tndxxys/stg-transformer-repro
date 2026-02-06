@@ -82,10 +82,10 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
                 f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, -self.args.pred_len:, f_dim:]
-                batch_y = batch_y[:, -self.args.pred_len:, f_dim:]
+                outputs = outputs[:, -self.args.pred_len:, :]
+                batch_y = batch_y[:, -self.args.pred_len:, :]
 
-                loss = criterion(outputs, batch_y)
+                loss = criterion(outputs[:, :, f_dim:], batch_y[:, :, f_dim:])
                 total_loss.append(loss.item())
 
                 pred_std = outputs.detach().cpu().numpy()
@@ -97,6 +97,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 else:
                     pred_raw = pred_std
                     true_raw = true_std
+
+                pred_std = pred_std[:, :, f_dim:]
+                true_std = true_std[:, :, f_dim:]
+                pred_raw = pred_raw[:, :, f_dim:]
+                true_raw = true_raw[:, :, f_dim:]
 
                 preds_std.append(pred_std)
                 trues_std.append(true_std)
