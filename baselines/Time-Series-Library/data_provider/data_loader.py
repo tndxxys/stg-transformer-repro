@@ -55,6 +55,9 @@ class Dataset_ETT_hour(Dataset):
         border2s = [12 * 30 * 24, 12 * 30 * 24 + 4 * 30 * 24, 12 * 30 * 24 + 8 * 30 * 24]
         border1 = border1s[self.set_type]
         border2 = border2s[self.set_type]
+        if self.set_type == 2 and num_test == 0:
+            border1 = border1s[1]
+            border2 = border2s[1]
 
         if self.features == 'M' or self.features == 'MS':
             cols_data = df_raw.columns[1:]
@@ -246,9 +249,26 @@ class Dataset_Custom(Dataset):
         cols.remove(self.target)
         cols.remove('date')
         df_raw = df_raw[['date'] + cols + [self.target]]
-        num_train = int(len(df_raw) * 0.7)
-        num_test = int(len(df_raw) * 0.2)
-        num_vali = len(df_raw) - num_train - num_test
+        # align split ratios with STG_Transformer defaults when provided
+        train_ratio = getattr(self.args, 'train_ratio', 0.7)
+        val_ratio = getattr(self.args, 'val_ratio', 0.2)
+        test_ratio = getattr(self.args, 'test_ratio', 0.1)
+        total_ratio = train_ratio + val_ratio + test_ratio
+        if total_ratio <= 0:
+            train_ratio, val_ratio, test_ratio = 0.7, 0.2, 0.1
+            total_ratio = 1.0
+        if abs(total_ratio - 1.0) > 1e-6:
+            train_ratio /= total_ratio
+            val_ratio /= total_ratio
+            test_ratio /= total_ratio
+
+        num_train = int(len(df_raw) * train_ratio)
+        num_vali = int(len(df_raw) * val_ratio)
+        num_test = len(df_raw) - num_train - num_vali
+        if num_test < 0:
+            num_test = 0
+            num_vali = len(df_raw) - num_train
+
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
         border2s = [num_train, num_train + num_vali, len(df_raw)]
         border1 = border1s[self.set_type]

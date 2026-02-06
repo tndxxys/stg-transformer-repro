@@ -39,6 +39,11 @@ if __name__ == '__main__':
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
 
+    # custom split ratios for Dataset_Custom
+    parser.add_argument('--train_ratio', type=float, default=0.8, help='train split ratio for custom dataset')
+    parser.add_argument('--val_ratio', type=float, default=0.2, help='val split ratio for custom dataset')
+    parser.add_argument('--test_ratio', type=float, default=0.0, help='test split ratio for custom dataset')
+
     # forecasting task
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
     parser.add_argument('--label_len', type=int, default=48, help='start token length')

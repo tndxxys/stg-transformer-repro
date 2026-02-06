@@ -193,6 +193,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         preds = []
         trues = []
+        preds_std = []
+        trues_std = []
         folder_path = './test_results/' + setting + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
@@ -228,6 +230,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 batch_y = batch_y[:, -self.args.pred_len:, :].to(self.device)
                 outputs = outputs.detach().cpu().numpy()
                 batch_y = batch_y.detach().cpu().numpy()
+                pred_std = outputs
+                true_std = batch_y
                 if test_data.scale and self.args.inverse:
                     shape = outputs.shape
                     outputs = test_data.inverse_transform(outputs.reshape(shape[0] * shape[1], -1)).reshape(shape)
@@ -235,12 +239,16 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         
                 outputs = outputs[:, :, f_dim:]
                 batch_y = batch_y[:, :, f_dim:]
+                pred_std = pred_std[:, :, f_dim:]
+                true_std = true_std[:, :, f_dim:]
 
                 pred = outputs
                 true = batch_y
 
                 preds.append(pred)
                 trues.append(true)
+                preds_std.append(pred_std)
+                trues_std.append(true_std)
                 if i % 20 == 0:
                     input = batch_x.detach().cpu().numpy()
                     if test_data.scale and self.args.inverse:
@@ -252,6 +260,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         preds = np.concatenate(preds, axis=0)
         trues = np.concatenate(trues, axis=0)
+        preds_std = np.concatenate(preds_std, axis=0)
+        trues_std = np.concatenate(trues_std, axis=0)
         print('test shape:', preds.shape, trues.shape)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
@@ -279,7 +289,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             
 
         mae, mse, rmse, mape, mspe = metric(preds, trues)
+        mae_s, mse_s, rmse_s, mape_s, mspe_s = metric(preds_std, trues_std)
         print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
+        print('std_mse:{}, std_rmse:{}, std_mae:{}'.format(mse_s, rmse_s, mae_s))
         f = open("result_long_term_forecast.txt", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
