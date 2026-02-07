@@ -1,4 +1,5 @@
 from .model import STGTransformer
+from .model_v2 import STGTransformerV2
 from .layers import (
     GraphConvStack,
     TemporalEncoder,
@@ -12,6 +13,7 @@ from .utils import calculate_metrics, plot_predictions, count_parameters, invers
 
 __all__ = [
     'STGTransformer',
+    'STGTransformerV2',
     'GraphConvStack',
     'TemporalEncoder',
     'TemporalDecoder',

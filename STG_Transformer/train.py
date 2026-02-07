@@ -7,6 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 import argparse
 from tqdm import tqdm
 from .model import STGTransformer
+from .model_v2 import STGTransformerV2
 from .data_provider import get_dataloaders
 from .utils import calculate_metrics, inverse_transform_targets
 
@@ -192,7 +193,7 @@ def main(args):
         split_block_len=args.split_block_len
     )
 
-    model = STGTransformer(
+    model_kwargs = dict(
         n_features=meta["n_features"],
         n_nodes=meta["n_nodes"],
         d_model=args.d_model,
@@ -206,8 +207,15 @@ def main(args):
         freq_ratio=args.freq_ratio,
         freq_cutoff=args.freq_cutoff,
         top_k=args.top_k,
-        corr_threshold=args.corr_threshold
-    ).to(device)
+        corr_threshold=args.corr_threshold,
+    )
+    if args.model_variant == "v2":
+        model = STGTransformerV2(
+            **model_kwargs,
+            fusion_layers=args.fusion_layers,
+        ).to(device)
+    else:
+        model = STGTransformer(**model_kwargs).to(device)
 
     criterion = nn.MSELoss()
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -275,6 +283,8 @@ if __name__ == '__main__':
     parser.add_argument('--freq_cutoff', type=int, default=None)
     parser.add_argument('--top_k', type=int, default=4)
     parser.add_argument('--corr_threshold', type=float, default=None)
+    parser.add_argument('--model_variant', type=str, default='base', choices=['base', 'v2'])
+    parser.add_argument('--fusion_layers', type=int, default=1)
     parser.add_argument('--lr', type=float, default=0.0003)
     parser.add_argument('--weight_decay', type=float, default=3e-4)
     parser.add_argument('--epochs', type=int, default=30)
