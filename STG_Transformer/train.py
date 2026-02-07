@@ -1,5 +1,7 @@
 import os
 import math
+import random
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -164,6 +166,13 @@ def validate(model, dataloader, criterion, device, target_indices, scaler):
 
 
 def main(args):
+    if args.seed is not None and args.seed >= 0:
+        random.seed(args.seed)
+        np.random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(args.seed)
+
     if torch.backends.mps.is_available():
         device = torch.device("mps")
     elif torch.cuda.is_available():
@@ -300,6 +309,7 @@ if __name__ == '__main__':
     parser.add_argument('--split_mode', type=str, default=None, choices=['sequential', 'random_windows', 'random_blocks'])
     parser.add_argument('--split_seed', type=int, default=42)
     parser.add_argument('--split_block_len', type=int, default=1000)
+    parser.add_argument('--seed', type=int, default=-1, help='Global random seed; set -1 to disable fixed seed')
 
     args = parser.parse_args()
     if args.split_mode is None:
