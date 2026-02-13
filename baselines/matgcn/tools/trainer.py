@@ -6,6 +6,7 @@
 import json
 from functools import partial
 
+import numpy as np
 import torch
 from torch.nn import MSELoss
 from torch.optim import Adam
@@ -50,10 +51,17 @@ class Trainer:
         for epoch in range(self.epochs):
             print(f"Epoch: {epoch + 1}")
             t_loss = self.train_epoch(epoch)
-            v_loss, metrics = self.validate_epoch(epoch)
+            v_loss, metrics, preds, trues = self.validate_epoch(epoch)
             if epoch >= int(.2 * self.epochs) and metrics.MAE < best:
                 best = metrics.MAE
                 torch.save(self.model.state_dict(), f'{self.saved_dir}/model-{best:.2f}.pkl')
+                mse = float(np.mean((preds - trues) ** 2))
+                rmse = float(np.sqrt(mse))
+                mae = float(np.mean(np.abs(preds - trues)))
+                np.save(f'{self.saved_dir}/best_pred.npy', preds)
+                np.save(f'{self.saved_dir}/best_true.npy', trues)
+                with open(f'{self.saved_dir}/best_metrics.json', 'w', encoding='utf-8') as f:
+                    json.dump({'MSE': mse, 'MAE': mae, 'RMSE': rmse}, f, indent=2)
             history.append(dict(train_loss=t_loss, validate_loss=v_loss, metrics=metrics.state_dict))
         open(f'{self.saved_dir}/history.json', 'w').write(json.dumps(history))
 
@@ -71,7 +79,7 @@ class Trainer:
         pred = self.model(x, h, d)
         loss = self.criterion(pred, y)
         metrics.update(pred, y)
-        return loss.item()
+        return loss.item(), pred.detach().cpu(), y.detach().cpu()
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -90,13 +98,18 @@ class Trainer:
         metrics = Metrics()
         self.model.eval()
         total_loss, average_loss = .0, .0
+        pred_list, true_list = [], []
         with ProgressBar(total=len(self.validate_loader)) as bar:
             for idx, batch in enumerate(self.validate_loader):
-                loss = self.validate_batch(batch, metrics)
+                loss, pred, true = self.validate_batch(batch, metrics)
                 total_loss += loss
                 average_loss = total_loss / (idx + 1)
+                pred_list.append(pred)
+                true_list.append(true)
                 bar.update(
                     postfix=f'[Validate] loss={average_loss:.2f} MAE={metrics.MAE:.2f} RMSE={metrics.RMSE:.2f}'
                 )
                 self.validate_log(epoch=epoch, batch=idx, loss=loss, MAE=metrics.MAE, RMSE=metrics.RMSE)
-        return average_loss, metrics
+        preds = torch.cat(pred_list, dim=0).numpy()
+        trues = torch.cat(true_list, dim=0).numpy()
+        return average_loss, metrics, preds, trues

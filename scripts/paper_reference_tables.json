@@ -1,0 +1,158 @@
+{
+  "paper": {
+    "title": "A Dynamic Spatio-Temporal Feature-Enhanced Method for Marine Gas Turbine State Prediction",
+    "source_pdf": "动态时空特征增强的舰船燃气轮机状态预测方法研究_张祺.pdf",
+    "metrics": [
+      "MSE",
+      "MAE",
+      "RMSE"
+    ],
+    "horizons": [
+      96,
+      192,
+      336
+    ],
+    "targets": [
+      "kMc",
+      "kMt"
+    ]
+  },
+  "sota": {
+    "kMt": {
+      "96": {
+        "DLinear": {"MSE": 0.494, "MAE": 0.364, "RMSE": 0.702},
+        "FiLM": {"MSE": 0.126, "MAE": 0.225, "RMSE": 0.355},
+        "SCINet": {"MSE": 0.128, "MAE": 0.203, "RMSE": 0.358},
+        "TimesNet": {"MSE": 0.077, "MAE": 0.067, "RMSE": 0.278},
+        "TimeXer": {"MSE": 1.349, "MAE": 0.829, "RMSE": 1.161},
+        "WPMixer": {"MSE": 1.351, "MAE": 0.799, "RMSE": 1.162},
+        "iTransformer": {"MSE": 0.078, "MAE": 0.075, "RMSE": 0.280},
+        "Crossformer": {"MSE": 0.881, "MAE": 0.761, "RMSE": 0.938},
+        "Autoformer": {"MSE": 0.096, "MAE": 0.120, "RMSE": 0.310},
+        "PatchTST": {"MSE": 0.083, "MAE": 0.109, "RMSE": 0.288},
+        "DEST-GNN": {"MSE": 0.090, "MAE": 0.131, "RMSE": 0.301},
+        "MA-T-GCN": {"MSE": 0.077, "MAE": 0.066, "RMSE": 0.278},
+        "Ours": {"MSE": 0.011, "MAE": 0.062, "RMSE": 0.105}
+      },
+      "192": {
+        "DLinear": {"MSE": 0.621, "MAE": 0.363, "RMSE": 0.788},
+        "FiLM": {"MSE": 0.156, "MAE": 0.286, "RMSE": 0.395},
+        "SCINet": {"MSE": 0.156, "MAE": 0.234, "RMSE": 0.395},
+        "TimesNet": {"MSE": 0.051, "MAE": 0.053, "RMSE": 0.227},
+        "TimeXer": {"MSE": 0.888, "MAE": 0.571, "RMSE": 0.942},
+        "WPMixer": {"MSE": 0.877, "MAE": 0.526, "RMSE": 0.936},
+        "iTransformer": {"MSE": 0.056, "MAE": 0.064, "RMSE": 0.237},
+        "Crossformer": {"MSE": 0.900, "MAE": 0.766, "RMSE": 0.949},
+        "Autoformer": {"MSE": 0.226, "MAE": 0.234, "RMSE": 0.476},
+        "PatchTST": {"MSE": 0.057, "MAE": 0.096, "RMSE": 0.239},
+        "DEST-GNN": {"MSE": 0.062, "MAE": 0.113, "RMSE": 0.250},
+        "MA-T-GCN": {"MSE": 0.051, "MAE": 0.059, "RMSE": 0.226},
+        "Ours": {"MSE": 0.011, "MAE": 0.058, "RMSE": 0.109}
+      },
+      "336": {
+        "DLinear": {"MSE": 0.640, "MAE": 0.369, "RMSE": 0.800},
+        "FiLM": {"MSE": 0.248, "MAE": 0.317, "RMSE": 0.498},
+        "SCINet": {"MSE": 0.167, "MAE": 0.237, "RMSE": 0.409},
+        "TimesNet": {"MSE": 0.054, "MAE": 0.059, "RMSE": 0.234},
+        "TimeXer": {"MSE": 0.912, "MAE": 0.572, "RMSE": 0.955},
+        "WPMixer": {"MSE": 0.911, "MAE": 0.547, "RMSE": 0.954},
+        "iTransformer": {"MSE": 0.053, "MAE": 0.062, "RMSE": 0.231},
+        "Crossformer": {"MSE": 0.985, "MAE": 0.808, "RMSE": 0.992},
+        "Autoformer": {"MSE": 0.526, "MAE": 0.449, "RMSE": 0.725},
+        "PatchTST": {"MSE": 0.059, "MAE": 0.100, "RMSE": 0.244},
+        "DEST-GNN": {"MSE": 0.062, "MAE": 0.107, "RMSE": 0.250},
+        "MA-T-GCN": {"MSE": 0.053, "MAE": 0.053, "RMSE": 0.230},
+        "Ours": {"MSE": 0.012, "MAE": 0.050, "RMSE": 0.113}
+      }
+    },
+    "kMc": {
+      "96": {
+        "DLinear": {"MSE": 0.189, "MAE": 0.221, "RMSE": 0.435},
+        "FiLM": {"MSE": 0.126, "MAE": 0.225, "RMSE": 0.355},
+        "SCINet": {"MSE": 0.134, "MAE": 0.187, "RMSE": 0.366},
+        "TimesNet": {"MSE": 0.077, "MAE": 0.067, "RMSE": 0.279},
+        "TimeXer": {"MSE": 0.082, "MAE": 0.104, "RMSE": 0.287},
+        "WPMixer": {"MSE": 0.079, "MAE": 0.079, "RMSE": 0.282},
+        "iTransformer": {"MSE": 0.078, "MAE": 0.074, "RMSE": 0.279},
+        "Crossformer": {"MSE": 0.019, "MAE": 0.059, "RMSE": 0.141},
+        "Autoformer": {"MSE": 0.111, "MAE": 0.126, "RMSE": 0.333},
+        "PatchTST": {"MSE": 0.083, "MAE": 0.109, "RMSE": 0.288},
+        "DEST-GNN": {"MSE": 0.016, "MAE": 0.067, "RMSE": 0.130},
+        "MA-T-GCN": {"MSE": 0.051, "MAE": 0.050, "RMSE": 0.226},
+        "Ours": {"MSE": 0.013, "MAE": 0.049, "RMSE": 0.115}
+      },
+      "192": {
+        "DLinear": {"MSE": 0.142, "MAE": 0.191, "RMSE": 0.377},
+        "FiLM": {"MSE": 0.149, "MAE": 0.264, "RMSE": 0.386},
+        "SCINet": {"MSE": 0.127, "MAE": 0.201, "RMSE": 0.357},
+        "TimesNet": {"MSE": 0.051, "MAE": 0.056, "RMSE": 0.227},
+        "TimeXer": {"MSE": 0.056, "MAE": 0.089, "RMSE": 0.236},
+        "WPMixer": {"MSE": 0.053, "MAE": 0.063, "RMSE": 0.231},
+        "iTransformer": {"MSE": 0.052, "MAE": 0.060, "RMSE": 0.229},
+        "Crossformer": {"MSE": 0.030, "MAE": 0.067, "RMSE": 0.174},
+        "Autoformer": {"MSE": 0.147, "MAE": 0.194, "RMSE": 0.383},
+        "PatchTST": {"MSE": 0.057, "MAE": 0.096, "RMSE": 0.239},
+        "DEST-GNN": {"MSE": 0.055, "MAE": 0.079, "RMSE": 0.234},
+        "MA-T-GCN": {"MSE": 0.053, "MAE": 0.053, "RMSE": 0.230},
+        "Ours": {"MSE": 0.017, "MAE": 0.053, "RMSE": 0.130}
+      },
+      "336": {
+        "DLinear": {"MSE": 0.153, "MAE": 0.197, "RMSE": 0.392},
+        "FiLM": {"MSE": 0.221, "MAE": 0.323, "RMSE": 0.471},
+        "SCINet": {"MSE": 0.155, "MAE": 0.234, "RMSE": 0.394},
+        "TimesNet": {"MSE": 0.054, "MAE": 0.060, "RMSE": 0.233},
+        "TimeXer": {"MSE": 0.058, "MAE": 0.092, "RMSE": 0.241},
+        "WPMixer": {"MSE": 0.055, "MAE": 0.063, "RMSE": 0.235},
+        "iTransformer": {"MSE": 0.055, "MAE": 0.062, "RMSE": 0.235},
+        "Crossformer": {"MSE": 0.022, "MAE": 0.064, "RMSE": 0.149},
+        "Autoformer": {"MSE": 0.903, "MAE": 0.759, "RMSE": 0.949},
+        "PatchTST": {"MSE": 0.059, "MAE": 0.101, "RMSE": 0.244},
+        "DEST-GNN": {"MSE": 0.081, "MAE": 0.093, "RMSE": 0.284},
+        "MA-T-GCN": {"MSE": 0.077, "MAE": 0.066, "RMSE": 0.278},
+        "Ours": {"MSE": 0.021, "MAE": 0.059, "RMSE": 0.147}
+      }
+    }
+  },
+  "ablation": {
+    "kMt": {
+      "96": {
+        "Backbone": {"MSE": 0.082, "MAE": 0.102, "RMSE": 0.287},
+        "Backbone+M1": {"MSE": 0.049, "MAE": 0.090, "RMSE": 0.222},
+        "Backbone+M1+M2": {"MSE": 0.039, "MAE": 0.076, "RMSE": 0.199},
+        "Backbone+M1+M2+M3": {"MSE": 0.011, "MAE": 0.062, "RMSE": 0.105}
+      },
+      "192": {
+        "Backbone": {"MSE": 0.081, "MAE": 0.154, "RMSE": 0.284},
+        "Backbone+M1": {"MSE": 0.056, "MAE": 0.091, "RMSE": 0.237},
+        "Backbone+M1+M2": {"MSE": 0.052, "MAE": 0.079, "RMSE": 0.229},
+        "Backbone+M1+M2+M3": {"MSE": 0.011, "MAE": 0.058, "RMSE": 0.109}
+      },
+      "336": {
+        "Backbone": {"MSE": 0.121, "MAE": 0.172, "RMSE": 0.349},
+        "Backbone+M1": {"MSE": 0.068, "MAE": 0.105, "RMSE": 0.261},
+        "Backbone+M1+M2": {"MSE": 0.055, "MAE": 0.091, "RMSE": 0.235},
+        "Backbone+M1+M2+M3": {"MSE": 0.012, "MAE": 0.050, "RMSE": 0.113}
+      }
+    },
+    "kMc": {
+      "96": {
+        "Backbone": {"MSE": 0.125, "MAE": 0.125, "RMSE": 0.354},
+        "Backbone+M1": {"MSE": 0.078, "MAE": 0.082, "RMSE": 0.280},
+        "Backbone+M1+M2": {"MSE": 0.057, "MAE": 0.073, "RMSE": 0.240},
+        "Backbone+M1+M2+M3": {"MSE": 0.013, "MAE": 0.049, "RMSE": 0.115}
+      },
+      "192": {
+        "Backbone": {"MSE": 0.157, "MAE": 0.132, "RMSE": 0.396},
+        "Backbone+M1": {"MSE": 0.081, "MAE": 0.091, "RMSE": 0.285},
+        "Backbone+M1+M2": {"MSE": 0.062, "MAE": 0.078, "RMSE": 0.249},
+        "Backbone+M1+M2+M3": {"MSE": 0.017, "MAE": 0.053, "RMSE": 0.130}
+      },
+      "336": {
+        "Backbone": {"MSE": 0.183, "MAE": 0.164, "RMSE": 0.428},
+        "Backbone+M1": {"MSE": 0.090, "MAE": 0.095, "RMSE": 0.301},
+        "Backbone+M1+M2": {"MSE": 0.079, "MAE": 0.079, "RMSE": 0.281},
+        "Backbone+M1+M2+M3": {"MSE": 0.021, "MAE": 0.059, "RMSE": 0.147}
+      }
+    }
+  }
+}

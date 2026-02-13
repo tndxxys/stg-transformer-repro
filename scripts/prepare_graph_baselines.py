@@ -115,6 +115,10 @@ def main():
     parser.add_argument("--adj_mode", choices=["corr", "topk", "full"], default="corr")
     parser.add_argument("--top_k", type=int, default=8)
     parser.add_argument("--threshold", type=float, default=None)
+    parser.add_argument("--drop_constant_cols", action="store_true",
+                        help="Drop constant columns before graph construction")
+    parser.add_argument("--keep_constant_cols", dest="drop_constant_cols", action="store_false")
+    parser.set_defaults(drop_constant_cols=True)
     parser.add_argument("--hours", type=str, default="1,2,3", help="Hour steps list for MATGCN")
     parser.add_argument("--destgcn_dir", type=str, default="baselines/DeSTGNN_full/data/CBM")
     parser.add_argument("--destgcn_config", type=str, default="baselines/DeSTGNN_full/configurations/CBM.conf")
@@ -125,6 +129,12 @@ def main():
     df = pd.read_csv(args.csv_path)
     if "date" in df.columns:
         df = df.drop(columns=["date"])
+    if args.drop_constant_cols:
+        nunique = df.nunique(dropna=False)
+        constant_cols = [c for c in df.columns if nunique[c] <= 1]
+        if constant_cols:
+            df = df.drop(columns=constant_cols)
+            print(f"Dropped constant columns: {constant_cols}")
     values = df.values.astype(np.float32)
     n_nodes = values.shape[1]
 

@@ -185,6 +185,9 @@ class Exp_Main(Exp_Basic):
         
             mae, mse, rmse, mape, mspe = metric(preds.numpy(), trues.numpy())
             print('mse: {}, mae: {}'.format(mse, mae))
+            np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse]))
+            np.save(folder_path + 'pred.npy', preds.numpy())
+            np.save(folder_path + 'true.npy', trues.numpy())
             return mse, mae
 
     
