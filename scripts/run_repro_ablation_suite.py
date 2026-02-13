@@ -752,6 +752,18 @@ def main():
     parser.add_argument("--stg_patience", type=int, default=15)
     parser.add_argument("--baseline_epochs", type=int, default=30)
     parser.add_argument("--baseline_patience", type=int, default=10)
+    parser.add_argument(
+        "--ablation_only",
+        "--skip_sota",
+        dest="ablation_only",
+        action="store_true",
+        help="Run only STG ablation matrix and skip all 12 SOTA baseline runs.",
+    )
+    parser.add_argument(
+        "--with_itransformer",
+        action="store_true",
+        help="When used with --ablation_only, also run iTransformer as a single baseline.",
+    )
     args = parser.parse_args()
 
     args.repo_root = os.path.abspath(args.repo_root)
@@ -789,6 +801,8 @@ def main():
             "epochs": args.baseline_epochs,
             "patience": args.baseline_patience,
         },
+        "ablation_only": bool(args.ablation_only),
+        "with_itransformer": bool(args.with_itransformer),
         "stg_best_params": STG_BEST_PARAMS,
         "ablation_modes": [x[1] for x in ABLATION_MODES],
         "sota_models": TSL_MODELS + ["TimeXer", "WPMixer", "DEST-GNN", "MA-T-GCN"],
@@ -803,14 +817,29 @@ def main():
     for target in targets:
         for horizon in horizons:
             _run_stg_ablation(args, records_dir, logs_dir, clean_csv, target, horizon)
-            for model in TSL_MODELS:
-                _run_tsl_model(args, records_dir, logs_dir, clean_csv, clean_root, target, horizon, model, c_in)
-            _run_timexer(args, records_dir, logs_dir, clean_csv, clean_root, target, horizon, c_in)
-            _run_wpmixer(args, records_dir, logs_dir, clean_csv, clean_root, target, horizon, c_in)
+            if args.ablation_only:
+                if args.with_itransformer:
+                    _run_tsl_model(
+                        args,
+                        records_dir,
+                        logs_dir,
+                        clean_csv,
+                        clean_root,
+                        target,
+                        horizon,
+                        "iTransformer",
+                        c_in,
+                    )
+            else:
+                for model in TSL_MODELS:
+                    _run_tsl_model(args, records_dir, logs_dir, clean_csv, clean_root, target, horizon, model, c_in)
+                _run_timexer(args, records_dir, logs_dir, clean_csv, clean_root, target, horizon, c_in)
+                _run_wpmixer(args, records_dir, logs_dir, clean_csv, clean_root, target, horizon, c_in)
 
-    for horizon in horizons:
-        _run_destgnn_shared(args, records_dir, logs_dir, clean_csv, horizon, target_map, c_in)
-        _run_matgcn_shared(args, records_dir, logs_dir, clean_csv, horizon, target_map, c_in)
+    if not args.ablation_only:
+        for horizon in horizons:
+            _run_destgnn_shared(args, records_dir, logs_dir, clean_csv, horizon, target_map, c_in)
+            _run_matgcn_shared(args, records_dir, logs_dir, clean_csv, horizon, target_map, c_in)
 
     rc = _run_report_builder(args)
     if rc != 0:
